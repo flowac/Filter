@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "Content De-Duplicator",
+    "version": "0.2.0",
+    "description": "Hides duplicate or similar content you've already seen on Reddit and Twitter using intelligent fuzzy matching.",
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "*://*.reddit.com/*",
+        "*://twitter.com/*",
+        "*://x.com/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.reddit.com/*",
+                "*://twitter.com/*",
+                "*://x.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "author": "Antigravity"
+}

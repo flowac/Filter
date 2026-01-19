@@ -1,17 +1,5 @@
-// ==UserScript==
-// @name         Content De-Duplicator
-// @namespace    http://tampermonkey.net/
-// @version      0.2.0
-// @description  Hides content you have already seen based on text content. Works on Chrome & Firefox.
-// @author       Antigravity
-// @match        *://twitter.com/*
-// @match        *://x.com/*
-// @match        *://www.reddit.com/*
-// @match        *://*.reddit.com/*
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_addStyle
-// ==/UserScript==
+// Content De-Duplicator - Chrome Extension
+// Hides duplicate or similar content on Reddit and Twitter
 
 (function () {
     'use strict';
@@ -31,16 +19,23 @@
         'high': 4   // Aggressive: Matches significant typos or variations.
     };
 
-    // --- Polyfills for Development/Testing without TM ---
+    // --- Chrome Extension Storage API ---
     const GM = {
-        getValue: (typeof GM_getValue !== 'undefined') ? GM_getValue : (msg, def) => {
-            const val = localStorage.getItem(msg);
-            return val ? JSON.parse(val) : def;
+        getValue: async (key, defaultValue) => {
+            return new Promise((resolve) => {
+                chrome.storage.local.get([key], (result) => {
+                    resolve(result[key] !== undefined ? result[key] : defaultValue);
+                });
+            });
         },
-        setValue: (typeof GM_setValue !== 'undefined') ? GM_setValue : (key, val) => {
-            localStorage.setItem(key, JSON.stringify(val));
+        setValue: async (key, value) => {
+            return new Promise((resolve) => {
+                chrome.storage.local.set({ [key]: value }, () => {
+                    resolve();
+                });
+            });
         },
-        addStyle: (typeof GM_addStyle !== 'undefined') ? GM_addStyle : (css) => {
+        addStyle: (css) => {
             const style = document.createElement('style');
             style.textContent = css;
             document.head.appendChild(style);
@@ -211,15 +206,21 @@
     // --- Logic: Storage ---
     class StorageManager {
         constructor() {
-            this.db = GM.getValue(CONFIG.storageKey, {});
-            this.prune();
+            this.db = {};
+            this.initialized = false;
         }
 
-        save() {
-            GM.setValue(CONFIG.storageKey, this.db);
+        async init() {
+            this.db = await GM.getValue(CONFIG.storageKey, {});
+            await this.prune();
+            this.initialized = true;
         }
 
-        prune() {
+        async save() {
+            await GM.setValue(CONFIG.storageKey, this.db);
+        }
+
+        async prune() {
             const now = Date.now();
             let changed = false;
             for (const scope in this.db) {
@@ -234,7 +235,7 @@
                     }
                 }
             }
-            if (changed) this.save();
+            if (changed) await this.save();
         }
 
         /**
