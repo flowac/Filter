@@ -1,49 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Content Filter Test Harness</title>
+    <title>Content Filter Test Harness v8 - Final</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #eee; }
-        .feed { max-width: 600px; margin: 0 auto; background: white; padding: 20px; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #eee;
+        }
+
+        .wrapper {
+            background: white;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .label {
+            font-size: 0.8em;
+            color: #555;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
         .content-item {
             border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+            padding: 10px;
             background: #fff;
+            border-radius: 4px;
         }
-        .content-item h4 { margin-top: 0; }
-        .controls { position: fixed; top: 10px; left: 10px; background:white; padding:10px; border:1px solid #ccc;}
+
+        .content-item[data-ag-processed="true"] {
+            border-left: 5px solid green;
+        }
     </style>
 </head>
+
 <body>
-    <div class="controls">
-        <button onclick="addDuplicate()">Add Duplicate Code</button>
-        <button onclick="addNew()">Add New Content</button>
-        <button onclick="localStorage.clear(); location.reload();">Clear Storage & Reload</button>
-        <p>Instructions: Load this page. The script should run automatically.<br>
-           If you refresh, 'Original Post' should become hidden because it was stored.<br>
-           Click 'Add Duplicate' to see immediate hiding behavior.
-        </p>
-    </div>
+    <div class="wrapper">
+        <button onclick="localStorage.clear(); location.reload();" style="margin-bottom:20px">Clear Storage &
+            Reload</button>
+        <p><i>Note: Default Mode is 'Low' (Standard).</i></p>
 
-    <div class="feed" id="feed">
-        <div class="content-item">
-            <h4>Post 1</h4>
-            <p>This is the first original post text. It should be visible the first time, and hidden the second time.</p>
+        <div class="label">1. Original Post (ID: 100)</div>
+        <div class="content-item" data-id="100">
+            <p>The developer is checking the code.</p>
         </div>
-        <div class="content-item">
-            <h4>Post 2</h4>
-            <p>Another unique post. Random data: 12345.</p>
-        </div>
-         <div class="content-item">
-            <h4>Post 3 (Duplicate of 1)</h4>
-            <p>This is the first original post text. It should be visible the first time, and hidden the second time.</p>
-        </div>
-    </div>
 
-    <!-- Load the script directly. The metadata header comments are valid JS comments so this works. -->
+        <div class="label">2. Stemmed/SimHash Match (ID: 101) - Should be HIDDEN by Default (Low)</div>
+        <div class="content-item" data-id="101">
+            <p>A developer checked codes.</p>
+            <!-- Same stemming + stopwords -> Identical SimHash -> Dist 0. -->
+        </div>
+
+        <div class="label">3. Near Match (ID: 102) - Should be VISIBLE at Low, HIDDEN at High</div>
+        <div class="content-item" data-id="102">
+            <p>The developer is checking the node.</p>
+            <!-- 'code' vs 'node'. 1 char diff. SimHash likely Dist > 0. -->
+        </div>
+
+    </div>
     <script src="content_filter.user.js"></script>
 </body>
+
 </html>
